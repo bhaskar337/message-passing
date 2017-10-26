@@ -1,6 +1,7 @@
 import pygame
 import random
 import threading
+import time
 from config import *
 from signal import Signal
 from road import Road
@@ -11,7 +12,7 @@ from car import Car
 class MessagePassing(threading.Thread):
 	
 
-	def __init__(self,tId,lock):
+	def __init__(self,tId,lock,eve):
 		super(MessagePassing,self).__init__()
 		self.road = Road()
 		self.signal1 = Signal(True, 540, 130)
@@ -20,6 +21,7 @@ class MessagePassing(threading.Thread):
 		self.car2 = Car(2)
 		self.tId = tId
 		self.lock = lock
+		self.eve = eve
 
 
 	def render(self):
@@ -54,16 +56,22 @@ class MessagePassing(threading.Thread):
 
 			if self.tId == 1:
 				self.lock.acquire()
+				# time.sleep(2)
 				self.car1.move(self.signal1.on)
 				self.signal1.switch(1)
 				self.signal2.switch(0)
 				self.lock.release()
+				time.sleep(0.01)
+			# self.eve.wait(timeout=0.04)
 			else:
 				self.lock.acquire()
+				# time.sleep(2)
 				self.car2.move(self.signal1.on)
 				self.signal1.switch(0)
 				self.signal2.switch(1)
 				self.lock.release()
+				time.sleep(0.03)
+			# self.eve.wait(timeout=0.6)
 
 
 	def close(self):
@@ -73,9 +81,10 @@ class MessagePassing(threading.Thread):
 
 def main():
 	# mp = MessagePassing()
+	e = threading.Event()
 	lock = threading.Lock()
-	T1car = MessagePassing(1,lock)
-	T2car = MessagePassing(2,lock)
+	T1car = MessagePassing(1,lock,e)
+	T2car = MessagePassing(2,lock,e)
 	T1car.start()
 	T2car.start()
 	# mp.run()
